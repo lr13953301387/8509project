@@ -1,4 +1,5 @@
 import os
+from glob import glob
 
 import cdflib
 import numpy as np
@@ -13,7 +14,7 @@ def pre_process():
     output={}
     for subject in subjects:
         output[subject] = {}
-        file_list = '.data/MyPoseFeatures/D3_Positions/*.cdf'
+        file_list = glob('./data/'+ subject +'/MyPoseFeatures/D3_Positions/*.cdf')
         for f in file_list:
             action = os.path.splitext(os.path.basename(f))[0]
 
@@ -57,3 +58,6 @@ def pre_process():
     np.savez_compressed(output_filename_2d, positions_2d=output_2d_poses, metadata=metadata)
 
     print('Done.')
+
+
+#pre_process()
