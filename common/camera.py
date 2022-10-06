@@ -1,3 +1,5 @@
+import hashlib
+
 import numpy as np
 import torch
 
@@ -114,3 +116,34 @@ def normalize_screen_coordinates(X, w, h):
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
     return X / w * 2 - [1, h / w]
 
+def camera_to_world(X, R, t):
+    return wrap(qrot, np.tile(R, (*X.shape[:-1], 1)), X) + t
+
+def deterministic_random(min_value, max_value, data):
+    digest = hashlib.sha256(data.encode()).digest()
+    raw_value = int.from_bytes(digest[:4], byteorder='little', signed=False)
+    return int(raw_value / (2**32 - 1) * (max_value - min_value)) + min_value
+
+
+def project_to_2d_linear(X, camera_params):
+    """
+    Project 3D points to 2D using only linear parameters (focal length and principal point).
+
+    Arguments:
+    X -- 3D points in *camera space* to transform (N, *, 3)
+    camera_params -- intrinsic parameteres (N, 2+2+3+2=9)
+    """
+    assert X.shape[-1] == 3
+    assert len(camera_params.shape) == 2
+    assert camera_params.shape[-1] == 9
+    assert X.shape[0] == camera_params.shape[0]
+
+    while len(camera_params.shape) < len(X.shape):
+        camera_params = camera_params.unsqueeze(1)
+
+    f = camera_params[..., :2]
+    c = camera_params[..., 2:4]
+
+    XX = torch.clamp(X[..., :2] / X[..., 2:], min=-1, max=1)
+
+    return f * XX + c
