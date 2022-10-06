@@ -4,8 +4,8 @@ from glob import glob
 import cdflib
 import numpy as np
 
-from common.Human36 import Human36mDataset
-from common.camera import world_to_camera, project_to_2d, image_coordinates,wrap
+from commons.Human36 import Human36mDataset
+from commons.camera import world_to_camera, project_to_2d, image_coordinates,wrap
 
 
 

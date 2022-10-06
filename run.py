@@ -17,12 +17,12 @@ import os
 import sys
 import errno
 
-from common.camera import *
+from commons.camera import *
 from model import *
-from common.loss import *
-from common.generators import ChunkedGenerator, UnchunkedGenerator
+from commons.loss import *
+from commons.generators import ChunkedGenerator, UnchunkedGenerator
 from time import time
-from common.Human36 import Human36mDataset
+from commons.Human36 import Human36mDataset
 
 args = parse_args()
 print(args)
