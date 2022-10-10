@@ -1,10 +1,11 @@
-
+import sys
+sys.path.append('./commons')
 import copy
 
 import numpy as np
 
-from Skeleton import Skeleton
-from camera import normalize_screen_coordinates
+from commons.Skeleton import Skeleton
+from commons.camera import normalize_screen_coordinates
 
 h36m_skeleton = Skeleton(parents=[-1,  0,  1,  2,  3,  4,  0,  6,  7,  8,  9,  0, 11, 12, 13, 14, 12,
        16, 17, 18, 19, 20, 19, 22, 12, 24, 25, 26, 27, 28, 27, 30],
