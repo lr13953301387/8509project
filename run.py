@@ -337,7 +337,7 @@ if not args.evaluate:
 
                 # Split point between labeled and unlabeled samples in the batch
                 split_idx = inputs_3d.shape[0]
-
+                print("split index: ", split_idx)
                 inputs_2d = torch.from_numpy(batch_2d.astype('float32'))
                 inputs_2d_semi = torch.from_numpy(batch_2d_semi.astype('float32'))
                 if torch.cuda.is_available():
@@ -785,7 +785,7 @@ if args.render:
 
         input_keypoints = image_coordinates(input_keypoints[..., :2], w=cam['res_w'], h=cam['res_h'])
 
-        from common.visualization import render_animation
+        from commons.visualization import render_animation
 
         render_animation(input_keypoints, keypoints_metadata, anim_output,
                          dataset.skeleton(), dataset.fps(), args.viz_bitrate, cam['azimuth'], args.viz_output,

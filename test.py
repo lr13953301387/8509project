@@ -331,11 +331,11 @@ if __name__ == '__main__':
             model_traj.load_state_dict(checkpoint['model_traj'])
         else:
             model_traj = None
-        test_generator = UnchunkedGenerator(cameras_valid, poses_valid, poses_valid_2d,
+    test_generator = UnchunkedGenerator(cameras_valid, poses_valid, poses_valid_2d,
                                             pad=pad, causal_shift=causal_shift, augment=False,
                                             kps_left=kps_left, kps_right=kps_right, joints_left=joints_left,
                                             joints_right=joints_right)
-        print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
+    print('INFO: Testing on {} frames'.format(test_generator.num_frames()))
 
     if not args.evaluate:
         cameras_train, poses_train, poses_train_2d = fetch_data(subjects_train, action_filter, subset=args.subset)
