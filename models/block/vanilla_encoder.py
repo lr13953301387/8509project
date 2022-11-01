@@ -2,13 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from models.block.strided_encoder import clones,LayerNorm,attention
 import numpy as np
 import math
 import os
 import copy
-
-def clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
 
 class Encoder(nn.Module):
     def __init__(self, layer, N):
@@ -21,29 +19,8 @@ class Encoder(nn.Module):
             x = layer(x, mask)
         return x
 
-class LayerNorm(nn.Module):
-    def __init__(self, features, eps=1e-6):
-        super(LayerNorm, self).__init__()
-        self.a_2 = nn.Parameter(torch.ones(features))
-        self.b_2 = nn.Parameter(torch.zeros(features))
-        self.eps = eps
 
-    def forward(self, x):
-        mean = x.mean(-1, keepdim=True)
-        std = x.std(-1, keepdim=True)
-        return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
-def attention(query, key, value, mask=None, dropout=None):
-    d_k = query.size(-1)
-    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
-
-    if mask is not None:
-        scores = scores.masked_fill(mask == 0, -1e9)
-    p_attn = F.softmax(scores, dim=-1)
-
-    if dropout is not None:
-        p_attn = dropout(p_attn)
-    return torch.matmul(p_attn, value), p_attn
 
 
 class SublayerConnection(nn.Module):
@@ -105,9 +82,9 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x):
         return self.w_2(self.dropout(self.gelu(self.w_1(x))))
 
-class Transformer(nn.Module):
+class Van_Transformer(nn.Module):
     def __init__(self, n_layers=3, d_model=256, d_ff=512, h=8, dropout=0.1, length=27):
-        super(Transformer, self).__init__()
+        super(Van_Transformer, self).__init__()
 
         self.pos_embedding = nn.Parameter(torch.randn(1, length, d_model))
         self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout)

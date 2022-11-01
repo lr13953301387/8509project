@@ -1,8 +1,23 @@
 import torch
 import torch.nn as nn
 from einops import rearrange
-from models.block.vanilla_transformer_encoder import Transformer
-from models.block.strided_transformer_encoder import Transformer as Transformer_reduce
+from models.block.vanilla_encoder import Van_Transformer
+from models.block.strided_encoder import Stride_Transformer
+
+class FReLU(nn.Module):
+    def __init__(self, c1, k=3):  # input_channels, kernel
+        super().__init__()
+        self.conv = nn.Conv1d(c1, c1, k, 1, 1, groups=c1, bias=False)
+        self.bn = nn.BatchNorm1d(c1)
+
+    def forward(self, x):
+        res=self.conv(x)
+        #print("type: ",type(res))
+        res=self.bn(res)
+        #print("type: ",type(x))
+        #print("type: ", type(res))
+        return torch.max(x, res)
+
 
 class Model(nn.Module):
     def __init__(self, args):
@@ -11,22 +26,24 @@ class Model(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv1d(2*args.n_joints, args.channel, kernel_size=1),
             nn.BatchNorm1d(args.channel, momentum=0.1),
-            nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
             nn.Dropout(0.25)
         )
 
-        self.Transformer = Transformer(args.layers, args.channel, args.d_hid, length=args.frames)
-        self.Transformer_reduce = Transformer_reduce(len(args.stride_num), args.channel, args.d_hid, \
+        self.Transformer = Van_Transformer(args.layers, args.channel, args.d_hid, length=args.frames)
+        self.Transformer_reduce = Stride_Transformer(len(args.stride_num), args.channel, args.d_hid, \
             length=args.frames, stride_num=args.stride_num)
         
         self.fcn = nn.Sequential(
             nn.BatchNorm1d(args.channel, momentum=0.1),
             nn.Conv1d(args.channel, 3*args.out_joints, kernel_size=1)
-        )
 
+        )
         self.fcn_1 = nn.Sequential(
             nn.BatchNorm1d(args.channel, momentum=0.1),
-            nn.Conv1d(args.channel, 3*args.out_joints, kernel_size=1)
+            nn.Conv1d(args.channel, 6*args.out_joints, kernel_size=1),
+            nn.BatchNorm1d(6*args.out_joints, momentum=0.1),
+            nn.Conv1d(6*args.out_joints, 3 * args.out_joints, kernel_size=1),
         )
 
     def forward(self, x):

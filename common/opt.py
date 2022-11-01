@@ -26,7 +26,7 @@ class opts():
         self.parser.add_argument('--gpu', default='0', type=str, help='')
         self.parser.add_argument('--train', default=1)
         self.parser.add_argument('--test', action='store_true')
-        self.parser.add_argument('--nepoch', type=int, default=21)
+        self.parser.add_argument('--nepoch', type=int, default=10)
         self.parser.add_argument('--batch_size', type=int, default=30, help='can be changed depending on your machine')
         self.parser.add_argument('--lr', type=float, default=1e-3)
         self.parser.add_argument('--lr_refine', type=float, default=1e-5)
@@ -36,10 +36,10 @@ class opts():
         self.parser.add_argument('-lrd', '--lr_decay', default=0.95, type=float)
         self.parser.add_argument('--frames', type=int, default=351)
         self.parser.add_argument('--pad', type=int, default=175) 
-        self.parser.add_argument('--refine', action='store_true')
+        #self.parser.add_argument('--refine', action='store_true')
         self.parser.add_argument('--reload', action='store_true')
-        self.parser.add_argument('--refine_reload', action='store_true')
-        self.parser.add_argument('--checkpoint', type=str, default='')
+        #self.parser.add_argument('--refine_reload', action='store_true')
+        self.parser.add_argument('--checkpoint', type=str, default='checkpoint/')
         self.parser.add_argument('--previous_dir', type=str, default='')
         self.parser.add_argument('--n_joints', type=int, default=17)
         self.parser.add_argument('--out_joints', type=int, default=17)
@@ -48,7 +48,7 @@ class opts():
         self.parser.add_argument('--out_channels', type=int, default=3)
         self.parser.add_argument('-previous_best_threshold', type=float, default= math.inf)
         self.parser.add_argument('-previous_name', type=str, default='')
-        self.parser.add_argument('-previous_refine_name', type=str, default='')
+        #self.parser.add_argument('-previous_refine_name', type=str, default='')
 
     def parse(self):
         self.init()
@@ -77,8 +77,7 @@ class opts():
         if self.opt.train:
             logtime = time.strftime('%m%d_%H%M_%S_')
 
-            self.opt.checkpoint = 'checkpoint/' + logtime + '%d'%(self.opt.pad*2+1) + \
-                '%s'%('' if self.opt.refine else '_no')
+            self.opt.checkpoint = 'checkpoint/' + logtime + '%d'%(self.opt.pad*2+1)
 
             if not os.path.exists(self.opt.checkpoint):
                 os.makedirs(self.opt.checkpoint)

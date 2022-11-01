@@ -17,7 +17,7 @@ from common.load_data_hm36 import Fusion
 from common.h36m_dataset import Human36mDataset
 from models.block.refine import refine
 from models.strided_transformer import Model
-
+from model import TemporalModelOptimized1f
 opt = opts().parse()
 os.environ["CUDA_VISIBLE_DEVICES"] = opt.gpu
 
@@ -30,14 +30,14 @@ def val(opt, actions, val_loader, model):
 
 def step(split, opt, actions, dataLoader, model, optimizer=None, epoch=None):
     model_trans = model['trans']
-    model_refine = model['refine']
+    #model_refine = model['refine']
 
     if split == 'train':
         model_trans.train()
-        model_refine.train()
+        #model_refine.train()
     else:
         model_trans.eval()
-        model_refine.eval()
+        #model_refine.eval()
 
     loss_all = {'loss': AccumLoss()}
     action_error_sum = define_error_list(actions)
@@ -62,21 +62,21 @@ def step(split, opt, actions, dataLoader, model, optimizer=None, epoch=None):
             out_target_single = out_target
             gt_3D_single = gt_3D
 
-        if opt.refine:
-            pred_uv = input_2D[:, opt.pad, :, :].unsqueeze(1)
-            uvd = torch.cat((pred_uv, output_3D[:, :, :, 2].unsqueeze(-1)), -1)
-            xyz = get_uvd2xyz(uvd, gt_3D_single, batch_cam) 
-            xyz[:, :, 0, :] = 0
-            output_3D = model_refine(output_3D, xyz) 
+        #if opt.refine:
+            #pred_uv = input_2D[:, opt.pad, :, :].unsqueeze(1)
+            #uvd = torch.cat((pred_uv, output_3D[:, :, :, 2].unsqueeze(-1)), -1)
+            #xyz = get_uvd2xyz(uvd, gt_3D_single, batch_cam)
+            #xyz[:, :, 0, :] = 0
+            #output_3D = model_refine(output_3D, xyz)
 
         if split == 'train':
-            if opt.refine:
-                loss = mpjpe_cal(output_3D, out_target_single)
-            else:
-                loss = mpjpe_cal(output_3D_VTE, out_target) + mpjpe_cal(output_3D, out_target_single)
+            #if opt.refine:
+                #loss = mpjpe_cal(output_3D, out_target_single)
+            #else:
+            loss = mpjpe_cal(output_3D_VTE, out_target) + mpjpe_cal(output_3D, out_target_single)
 
-                N = input_2D.size(0)
-                loss_all['loss'].update(loss.detach().cpu().numpy() * N, N)
+            N = input_2D.size(0)
+            loss_all['loss'].update(loss.detach().cpu().numpy() * N, N)
 
             optimizer.zero_grad()
             loss.backward()
@@ -86,17 +86,17 @@ def step(split, opt, actions, dataLoader, model, optimizer=None, epoch=None):
             output_3D[:, :, 0, :] = 0
             action_error_sum = test_calculation(output_3D, out_target, action, action_error_sum, opt.dataset, subject)
             
-            if opt.refine:
-                output_3D[:, :, 0, :] = 0
-                action_error_sum_refine = test_calculation(output_3D, out_target, action, action_error_sum_refine, opt.dataset, subject)
+            #if opt.refine:
+                #output_3D[:, :, 0, :] = 0
+                #action_error_sum_refine = test_calculation(output_3D, out_target, action, action_error_sum_refine, opt.dataset, subject)
 
     if split == 'train':
         return loss_all['loss'].avg
     elif split == 'test':
-        if opt.refine:
-            p1, p2 = print_error(opt.dataset, action_error_sum_refine, opt.train)
-        else:
-            p1, p2 = print_error(opt.dataset, action_error_sum, opt.train)
+        #if opt.refine:
+            #p1, p2 = print_error(opt.dataset, action_error_sum_refine, opt.train)
+        #else:
+        p1, p2 = print_error(opt.dataset, action_error_sum, opt.train)
 
         return p1, p2
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
     model = {}
     model['trans'] = Model(opt).cuda()
-    model['refine']= refine(opt).cuda()
+    #model['refine']= refine(opt).cuda()
 
     model_dict = model['trans'].state_dict()
     if opt.reload:
@@ -170,21 +170,21 @@ if __name__ == '__main__':
             model_dict[name] = pre_dict[name]
         model['trans'].load_state_dict(model_dict)
 
-    refine_dict = model['refine'].state_dict()
-    if opt.refine_reload:
-        model_path = sorted(glob.glob(os.path.join(opt.previous_dir, '*.pth')))
+    #refine_dict = model['refine'].state_dict()
+    #if opt.refine_reload:
+        #model_path = sorted(glob.glob(os.path.join(opt.previous_dir, '*.pth')))
 
-        refine_path = []
+        #refine_path = []
         for path in model_path:
             if path.split('/')[-1][0] == 'r':
-                refine_path = path
-                print(refine_path)
+                #refine_path = path
+                #print(refine_path)
                 break
 
-        pre_dict_refine = torch.load(refine_path)
-        for name, key in refine_dict.items():
-            refine_dict[name] = pre_dict_refine[name]
-        model['refine'].load_state_dict(refine_dict)
+        #pre_dict_refine = torch.load(refine_path)
+        #for name, key in refine_dict.items():
+            #refine_dict[name] = pre_dict_refine[name]
+        #model['refine'].load_state_dict(refine_dict)
 
     all_param = []
     lr = opt.lr
@@ -198,15 +198,15 @@ if __name__ == '__main__':
         
         p1, p2 = val(opt, actions, test_dataloader, model)
 
-        if opt.train and not opt.refine:
+        if opt.train :
             save_model_epoch(opt.checkpoint, epoch, model['trans'])
 
         if opt.train and p1 < opt.previous_best_threshold:
             opt.previous_name = save_model(opt.previous_name, opt.checkpoint, epoch, p1, model['trans'], 'no_refine')
 
-            if opt.refine:
-                opt.previous_refine_name = save_model(opt.previous_refine_name, opt.checkpoint, epoch,
-                                                      p1, model['refine'], 'refine')
+            #if opt.refine:
+                #opt.previous_refine_name = save_model(opt.previous_refine_name, opt.checkpoint, epoch,
+                                                      #p1, model['refine'], 'refine')
             opt.previous_best_threshold = p1
 
         if not opt.train:
