@@ -16,10 +16,10 @@ class Model(nn.Module):
         )
 
         self.Transformer = Van_Transformer(args.layers, args.channel, args.d_hid, length=args.frames,
-                                           use_improve=args.model_sel)
+                                           use_improve=args.model_selc)
         self.Transformer_reduce = Stride_Transformer(len(args.stride_num), args.channel, args.d_hid,
                                                      length=args.frames, stride_num=args.stride_num,
-                                                     use_improve=args.model_sel)
+                                                     use_improve=args.model_selc)
         
         self.fcn = nn.Sequential(
             nn.BatchNorm1d(args.channel, momentum=0.1),
