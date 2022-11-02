@@ -88,7 +88,7 @@ class Van_Transformer(nn.Module):
         super(Van_Transformer, self).__init__()
 
         self.pos_embedding = nn.Parameter(torch.randn(1, length, d_model))
-        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout,mode_sel=model_sel)
+        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout,model_sel=model_sel)
                 
     def forward(self, x, mask=None):
         x += self.pos_embedding
