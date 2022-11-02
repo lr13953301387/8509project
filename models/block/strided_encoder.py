@@ -121,13 +121,14 @@ class MultiHeadedAttention(nn.Module):
 
 
 class PositionwiseFeedForward(nn.Module):
-    def __init__(self, d_model, d_ff, dropout=0.1, number = -1, stride_num=-1):
+    def __init__(self, d_model, d_ff, dropout=0.1, number = -1, stride_num=-1,model_sel=1):
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = nn.Conv1d(d_model, d_ff, kernel_size=1, stride=1)
         self.w_2 = nn.Conv1d(d_ff, d_model, kernel_size=3, stride=stride_num[number], padding = 1)
-
-        self.gelu = nn.ReLU()
-
+        if(model_sel==1):
+            self.gelu = nn.SiLU()
+        else:
+            self.gelu=nn.ReLU()
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -138,26 +139,26 @@ class PositionwiseFeedForward(nn.Module):
         return x
 
 class Stride_Transformer(nn.Module):
-    def __init__(self, n_layers=3, d_model=256, d_ff=512, h=8, length=27, stride_num=None, dropout=0.1):
+    def __init__(self, n_layers=3, d_model=256, d_ff=512, h=8, length=27, stride_num=None, dropout=0.1,model_sel=1):
         super(Stride_Transformer, self).__init__()
 
         self.length = length
 
         self.stride_num = stride_num
-        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout, length = self.length)
+        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout, length = self.length,model_sel=model_sel)
 
     def forward(self, x, mask=None):
         x = self.model(x, mask)
 
         return x
 
-    def make_model(self, N=3, d_model=256, d_ff=512, h=8, dropout=0.1, length=27):
+    def make_model(self, N=3, d_model=256, d_ff=512, h=8, dropout=0.1, length=27,model_sel=1):
         c = copy.deepcopy
         attn = MultiHeadedAttention(h, d_model)
 
         model_EncoderLayer = []
         for i in range(N):
-            ff = PositionwiseFeedForward(d_model, d_ff, dropout, i, self.stride_num)
+            ff = PositionwiseFeedForward(d_model, d_ff, dropout, i, self.stride_num,model_sel=model_sel)
             model_EncoderLayer.append(EncoderLayer(d_model, c(attn), c(ff), dropout, self.stride_num, i))
 
         model_EncoderLayer = nn.ModuleList(model_EncoderLayer)

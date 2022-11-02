@@ -20,9 +20,6 @@ class Encoder(nn.Module):
         return x
 
 
-
-
-
 class SublayerConnection(nn.Module):
     def __init__(self, size, dropout):
         super(SublayerConnection, self).__init__()
@@ -72,22 +69,26 @@ class MultiHeadedAttention(nn.Module):
 
 
 class PositionwiseFeedForward(nn.Module):
-    def __init__(self, d_model, d_ff, dropout=0.1):
+    def __init__(self, d_model, d_ff, dropout=0.1,model_sel=1):
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
-        self.gelu = nn.ReLU()
+        if model_sel==1:
+            print("using silu")
+            self.gelu = nn.SiLU()
+        else:
+            self.gelu=nn.ReLU()
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         return self.w_2(self.dropout(self.gelu(self.w_1(x))))
 
 class Van_Transformer(nn.Module):
-    def __init__(self, n_layers=3, d_model=256, d_ff=512, h=8, dropout=0.1, length=27):
+    def __init__(self, n_layers=3, d_model=256, d_ff=512, h=8, dropout=0.1, length=27,model_sel=1):
         super(Van_Transformer, self).__init__()
 
         self.pos_embedding = nn.Parameter(torch.randn(1, length, d_model))
-        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout)
+        self.model = self.make_model(N=n_layers, d_model=d_model, d_ff=d_ff, h=h, dropout=dropout,mode_sel=model_sel)
                 
     def forward(self, x, mask=None):
         x += self.pos_embedding
@@ -96,10 +97,10 @@ class Van_Transformer(nn.Module):
 
         return x
 
-    def make_model(self, N=3, d_model=256, d_ff=512, h=8, dropout=0.1):
+    def make_model(self, N=3, d_model=256, d_ff=512, h=8, dropout=0.1,model_sel=1):
         c = copy.deepcopy
         attn = MultiHeadedAttention(h, d_model)
-        ff = PositionwiseFeedForward(d_model, d_ff, dropout)
+        ff = PositionwiseFeedForward(d_model, d_ff, dropout,model_sel=model_sel)
         model = Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N)
         return model
 
